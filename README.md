@@ -13,7 +13,7 @@ A mobile-first, citizen-centric platform that empowers communities to report and
 ---
 
 ## 🌟 Features
-### ✨ [Live Demo Frontend (netify)](https://pragati-path.netlify.app/)
+### ✨ [Live Demo User-Panel (netify)](https://pragati-path.netlify.app/)
 
 ### For Citizens
 - **AI-Powered Reporting**: Upload images or text — Gemini automatically categorizes and prioritizes issues.  
