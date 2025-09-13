@@ -1,0 +1,5 @@
+{
+  "name": "PragatiPath Admin Dashboard",
+  "description": "A comprehensive admin dashboard for the PragatiPath civic-issue reporting system. It allows administrators to monitor city-wide issues, manage reports, track user engagement, and generate AI-powered closure reports with digital signatures, ensuring transparency and efficiency in civic management.",
+  "requestFramePermissions": []
+}
