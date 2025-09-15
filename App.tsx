@@ -12,7 +12,7 @@ import AboutImpact from './pages/AboutImpact';
 import HelpFAQ from './pages/HelpFAQ';
 import Login from './pages/Login';
 import NotFound from './pages/NotFound';
-import Register from './pages/Register';
+// import Register from './pages/Register';
 import UserProfile from './pages/UserProfile';
 import { Issue } from './types';
 import { mockIssues } from './constants';
@@ -75,7 +75,7 @@ const AppContent = () => {
           <Route path="/about" element={<AboutImpact />} />
           <Route path="/faq" element={<HelpFAQ />} />
           <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+          {/* <Route path="/register" element={<Register />} /> */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>

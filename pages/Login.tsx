@@ -1,113 +1,176 @@
-import React, { useState, FormEvent } from 'react';
-import { motion } from 'framer-motion';
-import { MapPinIcon } from '../components/icons';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { MapPinIcon } from "../components/icons";
+import { useAuth } from "../context/AuthContext";
+import { useToast } from "../components/ui/Toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "../components/ui/Dialog";
 
-const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+type Step = "phone" | "otp";
+
+const Login: React.FC = () => {
+  const [phone, setPhone] = useState<string>("");
+  const [otp, setOtp] = useState<string>("");
+  const [aadhaar, setAadhaar] = useState<string>("");
+  const [step, setStep] = useState<Step>("phone");
+  const [aadhaarDialog, setAadhaarDialog] = useState<boolean>(false);
+
+  const { sendOtp, verifyOtp, loginWithAadhaar } = useAuth();
+  const { showToast } = useToast();
   const navigate = useNavigate();
-  const { login } = useAuth();
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError('');
-    try {
-      const loggedInUser = await login(email, password);
-      if (loggedInUser) {
-        if (loggedInUser.role === 'admin') {
-          navigate('/dashboard');
-        } else {
-          navigate('/profile');
-        }
-      } else {
-        setError('Invalid email or password.');
-      }
-    } catch (err) {
-      setError('An unexpected error occurred. Please try again.');
+  // 🔹 Handle OTP send
+  const handleSendOtp = async () => {
+    if (!phone) {
+      showToast("Please enter your phone number.", "error");
+      return;
+    }
+    const success = await sendOtp(phone);
+    if (success) {
+      showToast("OTP sent successfully! (check console in dev mode)", "success");
+      setStep("otp");
+    } else {
+      showToast("Failed to send OTP. Try again.", "error");
     }
   };
 
-  // FIX: Assign motion component to a capitalized variable to resolve TypeScript type inference issue.
+  // 🔹 Handle OTP verify
+  const handleVerifyOtp = async () => {
+    if (!otp) {
+      showToast("Please enter OTP.", "error");
+      return;
+    }
+    const user = await verifyOtp(phone, otp);
+    if (user) {
+      showToast(`Welcome, ${user.name}!`, "success");
+      navigate("/dashboard");
+    } else {
+      showToast("Invalid OTP. Please try again.", "error");
+    }
+  };
+
+  // 🔹 Handle Aadhaar login
+  const handleAadhaarLogin = async () => {
+    if (!aadhaar) {
+      showToast("Please enter Aadhaar number.", "error");
+      return;
+    }
+    const user = await loginWithAadhaar(aadhaar);
+    if (user) {
+      showToast(`Welcome via Aadhaar, ${user.name}!`, "success");
+      setAadhaarDialog(false);
+      navigate("/dashboard");
+    } else {
+      showToast("Aadhaar login failed.", "error");
+    }
+  };
+
   const MotionDiv = motion.div;
 
   return (
     <MotionDiv
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.5, type: 'spring' }}
+      transition={{ duration: 0.5, type: "spring" }}
       className="flex items-center justify-center py-12"
     >
       <div className="w-full max-w-md p-8 space-y-8 bg-gray-800/50 rounded-xl shadow-lg border border-gray-700">
         <div className="text-center">
-            <div className="flex justify-center items-center mb-4">
-                <MapPinIcon className="h-10 w-10 text-cyan-400" />
-                <span className="text-3xl font-bold text-white ml-2">PragatiPath</span>
-            </div>
-          <h2 className="text-2xl font-bold text-cyan-400">Login to Your Account</h2>
-          <p className="mt-2 text-gray-400">Please sign in to continue.</p>
+          <div className="flex justify-center items-center mb-4">
+            <MapPinIcon className="h-10 w-10 text-cyan-400" />
+            <span className="text-3xl font-bold text-white ml-2">PragatiPath</span>
+          </div>
+          <h2 className="text-2xl font-bold text-cyan-400">Login</h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && <p className="text-red-400 text-center bg-red-500/10 p-2 rounded-md">{error}</p>}
-          <div className="rounded-md shadow-sm -space-y-px">
-            <div>
-              <label htmlFor="email-address" className="sr-only">Email address</label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="relative block w-full appearance-none rounded-t-md border-0 bg-white/5 py-3 px-3 text-white ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-cyan-500 sm:text-sm"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
-            <div>
-              <label htmlFor="password" className="sr-only">Password</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                className="relative block w-full appearance-none rounded-b-md border-0 bg-white/5 py-3 px-3 text-white ring-1 ring-inset ring-gray-600 placeholder:text-gray-400 focus:z-10 focus:ring-2 focus:ring-inset focus:ring-cyan-500 sm:text-sm"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
 
-          <div className="mt-6 p-3 bg-gray-700/50 border border-gray-600 rounded-lg text-sm text-gray-400">
-            <p className="font-semibold text-gray-300 mb-2">For Demo Purposes:</p>
-            <ul className="list-disc list-inside space-y-1">
-              <li><strong>Admin Login:</strong> admin@test.com / password</li>
-              <li><strong>Citizen Login:</strong> bob@test.com / password</li>
-            </ul>
-          </div>
-
-          <div className="text-center text-sm pt-4">
-            <p className="text-gray-400">
-              Don't have an account?{' '}
-              <Link to="/register" className="font-medium text-cyan-400 hover:text-cyan-500">
-                Register here
-              </Link>
-            </p>
-          </div>
-          <div>
+        {/* Step 1 → Phone Input */}
+        {step === "phone" && (
+          <div className="space-y-4">
+            <input
+              type="tel"
+              placeholder="Enter Phone Number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full px-4 py-3 rounded-md bg-white/5 text-white ring-1 ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-cyan-500"
+            />
             <button
-              type="submit"
-              className="group relative flex w-full justify-center rounded-md border border-transparent bg-cyan-500 py-3 px-4 text-sm font-semibold text-white hover:bg-cyan-600 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 focus:ring-offset-gray-900 transition-colors"
+              onClick={handleSendOtp}
+              className="w-full bg-cyan-500 hover:bg-cyan-600 text-white py-3 rounded-md transition-colors"
             >
-              Sign in
+              Send OTP
             </button>
           </div>
-        </form>
+        )}
+
+        {/* Step 2 → OTP Input */}
+        {step === "otp" && (
+          <div className="space-y-4">
+            <input
+              type="text"
+              placeholder="Enter OTP"
+              value={otp}
+              onChange={(e) => setOtp(e.target.value)}
+              className="w-full px-4 py-3 rounded-md bg-white/5 text-white ring-1 ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-cyan-500"
+            />
+            <button
+              onClick={handleVerifyOtp}
+              className="w-full bg-green-500 hover:bg-green-600 text-white py-3 rounded-md transition-colors"
+            >
+              Verify OTP & Login
+            </button>
+            <button
+              onClick={() => setStep("phone")}
+              className="w-full bg-gray-500 hover:bg-gray-600 text-white py-2 rounded-md text-sm"
+            >
+              Back
+            </button>
+          </div>
+        )}
+
+        {/* Aadhaar Login */}
+        <div className="text-center">
+          <button
+            onClick={() => setAadhaarDialog(true)}
+            className="mt-6 w-full bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-md transition-colors"
+          >
+            Login with Aadhaar
+          </button>
+        </div>
       </div>
+
+      {/* Aadhaar Dialog */}
+      <Dialog open={aadhaarDialog} onOpenChange={setAadhaarDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Aadhaar Login</DialogTitle>
+            <DialogDescription>
+              Enter your Aadhaar number to login. By continuing, you consent to verification.
+            </DialogDescription>
+          </DialogHeader>
+          <input
+            type="text"
+            placeholder="Enter Aadhaar Number"
+            value={aadhaar}
+            onChange={(e) => setAadhaar(e.target.value)}
+            className="w-full px-4 py-3 rounded-md bg-white/5 text-white ring-1 ring-gray-600 placeholder:text-gray-400 focus:ring-2 focus:ring-cyan-500 mb-4"
+          />
+          <DialogFooter>
+            <button
+              onClick={handleAadhaarLogin}
+              className="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-md transition-colors"
+            >
+              Confirm & Login
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MotionDiv>
   );
 };

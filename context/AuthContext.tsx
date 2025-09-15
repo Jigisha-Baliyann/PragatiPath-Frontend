@@ -1,79 +1,86 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { AuthUser } from '../types';
-import { mockUsers } from '../constants';
 
 interface AuthContextType {
   user: AuthUser | null;
-  login: (email: string, password: string) => Promise<AuthUser | null>;
-  logout: () => void;
-  register: (name: string, email: string, password: string) => Promise<boolean>;
-  updateUser: (updatedUser: AuthUser) => void;
   loading: boolean;
+  sendOtp: (phone: string) => Promise<boolean>;
+  verifyOtp: (phone: string, otp: string) => Promise<AuthUser | null>;
+  loginWithAadhaar: (aadhaar: string) => Promise<AuthUser | null>;
+  logout: () => void;
+  updateUser: (updatedUser: AuthUser) => void; // ✅ added
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// In a real app, this would be in a secure backend. For demo, we use localStorage.
-const USERS_STORAGE_KEY = 'pragatipath_users';
 const SESSION_STORAGE_KEY = 'pragatipath_session';
+const USERS_STORAGE_KEY = 'pragatipath_users';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const storedSession = localStorage.getItem(SESSION_STORAGE_KEY);
-      if (storedSession) {
-        setUser(JSON.parse(storedSession));
-      }
-    } catch (error) {
-      console.error("Failed to parse user from localStorage", error);
-    } finally {
-        setLoading(false);
-    }
+    const storedUser = localStorage.getItem(SESSION_STORAGE_KEY);
+    if (storedUser) setUser(JSON.parse(storedUser));
+    setLoading(false);
   }, []);
 
-  const getUsers = () => {
+  const getUsers = (): AuthUser[] => {
     const users = localStorage.getItem(USERS_STORAGE_KEY);
     return users ? JSON.parse(users) : [];
   };
 
-  const login = async (email: string, password: string): Promise<AuthUser | null> => {
-    // NOTE: Storing plain text passwords is a huge security risk! This is only for the demo.
-    const foundUser = mockUsers.find((u) => u.email === email && u.password === password);
-    
-    if (foundUser) {
-      const authUser: AuthUser = { 
-          id: foundUser.id, 
-          name: foundUser.name, 
-          email: foundUser.email, 
-          role: foundUser.role,
-          avatarUrl: foundUser.avatarUrl,
-      };
-      setUser(authUser);
-      localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(authUser));
-      return authUser;
+  const saveUser = (newUser: AuthUser) => {
+    const users = getUsers();
+    const index = users.findIndex(u => u.id === newUser.id);
+    if (index === -1) {
+      users.push(newUser);
+    } else {
+      users[index] = newUser; // update existing
     }
-    
-    // Fallback to check localStorage for dynamically registered users
-    const dynamicallyRegisteredUsers = getUsers();
-    const foundDynamicUser = dynamicallyRegisteredUsers.find((u: any) => u.email === email && u.password === password);
-    if(foundDynamicUser) {
-        const authUser: AuthUser = {
-            id: foundDynamicUser.id,
-            name: foundDynamicUser.name,
-            email: foundDynamicUser.email,
-            role: 'citizen', // All dynamically registered users are citizens
-            avatarUrl: `https://picsum.photos/seed/${foundDynamicUser.name}/100`, // Generate a consistent avatar
-        };
-        setUser(authUser);
-        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(authUser));
-        return authUser;
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
+    setUser(newUser);
+    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(newUser));
+  };
+
+  const sendOtp = async (phone: string): Promise<boolean> => {
+    console.log(`Sending OTP to ${phone}... (mock: 123456)`);
+    return true;
+  };
+
+  const verifyOtp = async (phone: string, otp: string): Promise<AuthUser | null> => {
+    if (otp === '123456') {
+      let existingUser = getUsers().find(u => (u as any).phone === phone); // phone exists only in some AuthUser
+      if (!existingUser) {
+        existingUser = {
+          id: `user_${Date.now()}`,
+          name: `User_${phone.slice(-4)}`,
+          role: 'citizen',
+          avatarUrl: `https://picsum.photos/seed/${phone}/100`,
+          phone, // optional
+        } as AuthUser & { phone: string };
+        saveUser(existingUser);
+      } else {
+        setUser(existingUser);
+        localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(existingUser));
+      }
+      return existingUser;
     }
-
-
     return null;
+  };
+
+  const loginWithAadhaar = async (aadhaar: string): Promise<AuthUser | null> => {
+    console.log(`Logging in with Aadhaar ${aadhaar}...`);
+    const userAadhaar: AuthUser & { aadhaar: string } = {
+      id: `aadhaar_${aadhaar}`,
+      name: `AadhaarUser_${aadhaar.slice(-4)}`,
+      role: 'citizen',
+      avatarUrl: `https://picsum.photos/seed/${aadhaar}/100`,
+      aadhaar,
+    };
+    saveUser(userAadhaar);
+    return userAadhaar;
   };
 
   const logout = () => {
@@ -81,38 +88,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem(SESSION_STORAGE_KEY);
   };
 
-  const register = async (name: string, email: string, password: string): Promise<boolean> => {
-    if (mockUsers.some(u => u.email === email)) {
-        return false;
-    }
-    let users = getUsers();
-    if (users.some((u: any) => u.email === email)) {
-      return false; // User already exists
-    }
-    const newUser = { id: `user_${Date.now()}`, name, email, password }; // Plain text password for demo only
-    users.push(newUser);
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
-    return true;
-  };
-
+  // ✅ Add updateUser function
   const updateUser = (updatedUser: AuthUser) => {
-    setUser(updatedUser);
-    localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(updatedUser));
+    saveUser(updatedUser);
   };
-
-  const value = { user, login, logout, register, loading, updateUser };
 
   return (
-    <AuthContext.Provider value={value}>
+    <AuthContext.Provider value={{ user, loading, sendOtp, verifyOtp, loginWithAadhaar, logout, updateUser }}>
       {!loading && children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
+  if (!context) throw new Error('useAuth must be used within AuthProvider');
   return context;
 };
