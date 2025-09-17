@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => {
       outDir: path.resolve(__dirname, 'dist/user'), // Absolute path ensures correct build
       emptyOutDir: true                           // Clear old builds
     },
-    base: '/',
+    base: '/user/',
     server: {
       port: 5173,
       open: true,
