@@ -90,7 +90,7 @@ const Navbar: React.FC = () => {
           onClick={closeMenu}
           className="text-gray-300 hover:text-cyan-400 font-semibold"
         >
-          Login 
+          Login
         </Link>
       )}
     </div>
@@ -101,7 +101,12 @@ const Navbar: React.FC = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           <Link to="/" className="flex items-center space-x-2 text-2xl font-bold text-white">
-            <img src="/logo.png" alt="PragatiPath Logo" className="h-12 w-12" />
+            <img
+              src="/logo.png"
+              alt="PragatiPath Logo"
+              className="h-8 w-auto sm:h-10 md:h-12 lg:h-14 xl:h-16"
+            />
+
             <span>PragatiPath</span>
           </Link>
 

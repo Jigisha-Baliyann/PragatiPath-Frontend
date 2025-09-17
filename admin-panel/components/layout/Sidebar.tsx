@@ -23,7 +23,12 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage, onLogout
   return (
     <div className="flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-center h-20 border-b border-gray-200 dark:border-gray-700">
-        <img src="/logo.png" alt="PragatiPath Logo" className="h-12 w-auto" />
+        <img
+          src="/logo.png"
+          alt="PragatiPath Logo"
+          className="h-8 w-auto sm:h-10 md:h-12 lg:h-14 xl:h-16"
+        />
+
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">PragatiPath</h1>
       </div>
       <div className="flex-1 overflow-y-auto">
@@ -36,11 +41,10 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage, onLogout
                 e.preventDefault();
                 setCurrentPage(item.page);
               }}
-              className={`flex items-center px-4 py-2 mt-2 text-sm rounded-lg transition-colors duration-200 ${
-                currentPage === item.page
+              className={`flex items-center px-4 py-2 mt-2 text-sm rounded-lg transition-colors duration-200 ${currentPage === item.page
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
+                }`}
             >
               {item.icon}
               <span className="ml-3">{item.displayName}</span>
@@ -49,31 +53,30 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage, onLogout
         </nav>
       </div>
       <div className="px-4 py-4 border-t border-gray-200 dark:border-gray-700">
-         <a
-            href="#"
-            onClick={(e) => {
-                e.preventDefault();
-                setCurrentPage('Settings');
-            }}
-            className={`flex items-center px-4 py-2 mt-2 text-sm rounded-lg transition-colors duration-200 ${
-                currentPage === 'Settings'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
-              }`}
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            setCurrentPage('Settings');
+          }}
+          className={`flex items-center px-4 py-2 mt-2 text-sm rounded-lg transition-colors duration-200 ${currentPage === 'Settings'
+              ? 'bg-blue-600 text-white'
+              : 'text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+            }`}
         >
-            <Settings className="h-5 w-5" />
-            <span className="ml-3">Settings</span>
+          <Settings className="h-5 w-5" />
+          <span className="ml-3">Settings</span>
         </a>
         <a
-            href="#"
-            onClick={(e) => {
-                e.preventDefault();
-                onLogout();
-            }}
-            className="flex items-center px-4 py-2 mt-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            onLogout();
+          }}
+          className="flex items-center px-4 py-2 mt-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg"
         >
-            <LogOut className="h-5 w-5" />
-            <span className="ml-3">Logout</span>
+          <LogOut className="h-5 w-5" />
+          <span className="ml-3">Logout</span>
         </a>
       </div>
     </div>
