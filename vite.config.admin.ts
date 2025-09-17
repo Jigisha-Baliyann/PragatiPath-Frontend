@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
       outDir: path.resolve(__dirname, 'dist/admin'), // Absolute path for safety
       emptyOutDir: true                             // Clear previous build
     },
+    base: '/admin/',
     server: {
       port: 5174,
       open: true,
