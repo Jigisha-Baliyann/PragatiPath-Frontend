@@ -9,8 +9,8 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="flex items-center space-x-2 text-xl font-bold text-white mb-4 md:mb-0">
             <img
-              src="/logo.png"
-              alt="PragatiPath Logo"
+              src="/Logo.png"
+              alt="Logo"
               className="h-8 w-auto sm:h-10 md:h-12 lg:h-14 xl:h-16"
             />
 
