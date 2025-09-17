@@ -23,7 +23,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentPage, setCurrentPage, onLogout
   return (
     <div className="flex flex-col w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700">
       <div className="flex items-center justify-center h-20 border-b border-gray-200 dark:border-gray-700">
-        <img src="/logo.png" alt="PragatiPath Logo" className="h-12 w-12" />
+        <img src="/logo.png" alt="PragatiPath Logo" className="h-12 w-auto" />
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">PragatiPath</h1>
       </div>
       <div className="flex-1 overflow-y-auto">
