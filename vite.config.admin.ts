@@ -1,15 +1,17 @@
-import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react'
-import path from 'path'
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, '.', '')
+  // Load .env variables with VITE_ prefix
+  const env = loadEnv(mode, process.cwd(), '');
 
   return {
-    root: 'admin-panel',
+    root: 'admin-panel',           // Entry folder for admin panel
     plugins: [react()],
     define: {
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
+      // Use VITE_ prefixed env variables in frontend
+      'process.env.VITE_GEMINI_API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY),
     },
     resolve: {
       alias: {
@@ -17,11 +19,12 @@ export default defineConfig(({ mode }) => {
       },
     },
     build: {
-      outDir: '../dist-admin',
+      outDir: path.resolve(__dirname, 'dist/admin'), // Absolute path for safety
+      emptyOutDir: true                             // Clear previous build
     },
     server: {
       port: 5174,
       open: true,
     },
-  }
-})
+  };
+});
