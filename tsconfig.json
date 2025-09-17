@@ -12,7 +12,7 @@
     "moduleDetection": "force",
     "allowJs": true,
     "jsx": "react-jsx",
-    "baseUrl": ".",                // 👈 required for non-relative imports
+    "baseUrl": ".",                
     "paths": {
       "@/*": ["./*"],
       "@user/*": ["user-panel/*"],
