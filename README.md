@@ -33,8 +33,6 @@
 ### ✨ [Live Demo User-Panel](https://pragati-path.netlify.app/user)  
 ### ✨ [Live Demo Admin-Panel](https://pragati-path.netlify.app/admin)
 
-*(Add screenshots or GIFs here for better visual impact.)*
-
 ---
 
 ## 4️⃣ Tech Stack / Architecture
@@ -111,58 +109,7 @@ npm run dev:admin  # Admin panel
 
 ---
 
-## 7️⃣ AI Integration / Key Modules
-
-```ts
-import { GoogleGenerativeAI } from "@google/generative-ai";
-
-const genAI = new GoogleGenerativeAI(import.meta.env.VITE_GEMINI_API_KEY);
-
-export async function analyzeIssue(image: File) {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-  const result = await model.generateContent([
-    "Analyze this civic issue image:",
-    image,
-  ]);
-  return result.response.text();
-}
-```
-
-*Example of AI-powered civic issue classification.*
-
----
-
-## 8️⃣ Deployment Instructions
-
-### Build both panels
-
-```bash
-npm run build
-```
-
-### Netlify Configuration (`_redirects` or `netlify.toml`)
-
-```toml
-[build]
-  publish = "dist"
-  command = "npm run build"
-
-[[redirects]]
-  from = "/user/*"
-  to = "/user/index.html"
-  status = 200
-
-[[redirects]]
-  from = "/admin/*"
-  to = "/admin/index.html"
-  status = 200
-```
-
-*Deploy → Both `/user` and `/admin` will be live.*
-
----
-
-## 9️⃣ License & Acknowledgments
+## 7️⃣ License & Acknowledgments
 
 ```md
 MIT License – see LICENSE file for details.
@@ -176,15 +123,9 @@ Acknowledgments:
 
 ---
 
-## 🔟 Additional Notes
+## 8️⃣ Additional Notes
 
 * Mobile-first and **PWA-ready** design.
 * Supports **future backend integration** for persistent storage.
 * Contribution-friendly folder structure and **TypeScript-based safety**.
 
-```
-
-I can also **make it even more visually professional** with **emoji sections, collapsible code blocks, badges for build/status, and a screenshot gallery** to give it a GitHub portfolio-level appeal.  
-
-Do you want me to do that next?
-```
