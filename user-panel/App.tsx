@@ -17,24 +17,13 @@ import UserProfile from './pages/UserProfile';
 import { Issue } from './types';
 import { mockIssues } from './constants';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { IssuesProvider, useIssues } from './context/IssuesContext';
 import ChatAssistant from './components/ChatAssistant';
 
 // Renamed internal App component to avoid conflict with default export
 const AppContent = () => {
-  const [issues, setIssues] = React.useState<Issue[]>(mockIssues);
   const { user } = useAuth(); // Use auth context
-
-  const addIssue = (newIssue: Issue) => {
-    setIssues(prevIssues => [newIssue, ...prevIssues]);
-  };
-  
-  const updateIssue = (updatedIssue: Issue) => {
-    setIssues(prevIssues => 
-      prevIssues.map(issue => 
-        issue.id === updatedIssue.id ? updatedIssue : issue
-      )
-    );
-  };
+  const { issues, addIssue, updateIssue } = useIssues(); // Use issues context
 
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     const { user } = useAuth();
@@ -58,7 +47,7 @@ const AppContent = () => {
       <main className="flex-grow container mx-auto px-4 py-8">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/report" element={<ReportIssue onIssueSubmit={addIssue} />} />
+          <Route path="/report" element={<ReportIssue />} />
           <Route path="/issues" element={<IssuesFeed issues={issues} />} />
           <Route path="/issues/:issueId" element={<IssueDetail issues={issues} isAdmin={user?.role === 'admin'} updateIssue={updateIssue} />} />
           <Route path="/leaderboard" element={<Leaderboard />} />
@@ -89,7 +78,9 @@ function App() {
   return (
     <HashRouter>
       <AuthProvider>
-        <AppContent />
+        <IssuesProvider>
+          <AppContent />
+        </IssuesProvider>
       </AuthProvider>
     </HashRouter>
   );

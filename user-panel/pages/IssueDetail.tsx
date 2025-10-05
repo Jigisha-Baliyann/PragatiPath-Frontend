@@ -16,11 +16,12 @@ import {
 import CommentSection from '../components/CommentSection';
 import LiveMap from '../components/LiveMap';
 import AdminActions from '../components/AdminActions';
+import { useIssues } from '../context/IssuesContext';
 
 interface IssueDetailProps {
-  issues: Issue[];
+  issues?: Issue[]; // Made optional since we'll use context
   isAdmin: boolean;
-  updateIssue: (issue: Issue) => void;
+  updateIssue?: (issue: Issue) => void; // Made optional since we'll use context
 }
 
 const statusColors: Record<IssueStatus, string> = {
@@ -38,7 +39,11 @@ const priorityColors: Record<Issue['priority'], string> = {
     'Critical': 'bg-red-500/20 text-red-300',
 }
 
-const IssueDetail: React.FC<IssueDetailProps> = ({ issues, isAdmin, updateIssue }) => {
+const IssueDetail: React.FC<IssueDetailProps> = ({ issues: propIssues, isAdmin, updateIssue: propUpdateIssue }) => {
+  const { issues: contextIssues, updateIssue: contextUpdateIssue } = useIssues();
+  const issues = propIssues || contextIssues;
+  const updateIssue = propUpdateIssue || contextUpdateIssue;
+  
   const { issueId } = useParams<{ issueId: string }>();
   
   const issue = useMemo(() => issues.find(i => i.id === issueId), [issues, issueId]);

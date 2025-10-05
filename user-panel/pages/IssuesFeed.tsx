@@ -5,6 +5,7 @@ import IssueCard from '../components/IssueCard';
 import { Issue, IssueCategory, IssueStatus } from '../types';
 import { Squares2x2Icon, MapIcon } from '../components/icons';
 import MapView from '../components/MapView';
+import { useIssues } from '../context/IssuesContext';
 
 const FilterButton = ({ value, state, setState, children }: { value: string, state: string, setState: (val: any) => void, children: React.ReactNode }) => (
   <button
@@ -16,10 +17,12 @@ const FilterButton = ({ value, state, setState, children }: { value: string, sta
 );
 
 interface IssuesFeedProps {
-  issues: Issue[];
+  issues?: Issue[]; // Made optional since we'll use context
 }
 
-const IssuesFeed: React.FC<IssuesFeedProps> = ({ issues }) => {
+const IssuesFeed: React.FC<IssuesFeedProps> = ({ issues: propIssues }) => {
+  const { issues: contextIssues } = useIssues();
+  const issues = propIssues || contextIssues; // Use prop issues if provided, otherwise use context
   const [searchParams] = useSearchParams();
   const dashboardFilter = searchParams.get('filter');
 

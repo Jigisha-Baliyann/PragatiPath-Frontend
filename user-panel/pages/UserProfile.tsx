@@ -1,87 +1,66 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
-import { mockUsers, mockIssues } from '../constants';
+import { useIssues } from '../context/IssuesContext';
+import { mockUsers } from '../constants';
 import ReportedIssueRow from '../components/ReportedIssueRow';
-import { IssueStatus, Badge } from '../types';
+import ProfileEditModal from '../components/ProfileEditModal';
+import { IssueStatus, Badge, Issue } from '../types';
 
 const UserProfile: React.FC = () => {
   const { user, updateUser } = useAuth();
-  const [isEditing, setIsEditing] = useState(false);
+  const { issues, getIssuesByReporter } = useIssues();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   if (!user) return null; // protected route ensures user exists
 
-  const [name, setName] = useState(user.name);
-  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl);
-
   const MotionDiv = motion.div;
   const MotionImg = motion.img;
-  const MotionForm = motion.form;
 
-  const handleProfileUpdate = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateUser({ ...user, name, avatarUrl });
-    setIsEditing(false);
-  };
+  // Handle opening edit modal
+  const handleEditClick = useCallback(() => {
+    setIsModalOpen(true);
+  }, []);
 
-  const AccountDetailsEditor = () => (
+  // Handle closing edit modal
+  const handleCloseModal = useCallback(() => {
+    setIsModalOpen(false);
+  }, []);
+
+  // Handle saving profile changes
+  const handleSaveProfile = useCallback(async (data: { name: string; avatarUrl: string }) => {
+    await updateUser({ ...user, ...data });
+  }, [user, updateUser]);
+
+  const AccountDetailsEditor = React.memo(() => (
     <div className="bg-gray-800/50 rounded-lg border border-gray-700 p-6 mb-8">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-2xl font-bold text-white">Account Details</h2>
         <button
-          onClick={() => setIsEditing(!isEditing)}
+          onClick={handleEditClick}
           className="font-semibold text-cyan-400 hover:text-cyan-300 transition-colors px-4 py-2 rounded-full hover:bg-cyan-500/10"
         >
-          {isEditing ? 'Cancel' : 'Edit Profile'}
+          Edit Profile
         </button>
       </div>
-      {isEditing ? (
-        <MotionForm
-          onSubmit={handleProfileUpdate}
-          className="space-y-4"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
+      <div className="space-y-4">
+        <div className="flex items-center space-x-4">
+          <img
+            src={user.avatarUrl || `https://picsum.photos/seed/${user.id}/100`}
+            alt="Profile"
+            className="w-16 h-16 rounded-full border-2 border-gray-600 object-cover"
+          />
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-1">Full Name</label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="block w-full rounded-md border-0 bg-white/5 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-cyan-500"
-            />
+            <p className="text-lg font-semibold text-white">{user.name}</p>
+            <p className="text-gray-400">{user.email}</p>
           </div>
-          <div>
-            <label htmlFor="avatarUrl" className="block text-sm font-medium text-gray-300 mb-1">Avatar URL</label>
-            <input
-              type="text"
-              id="avatarUrl"
-              value={avatarUrl}
-              onChange={(e) => setAvatarUrl(e.target.value)}
-              className="block w-full rounded-md border-0 bg-white/5 py-2 px-3 text-white shadow-sm ring-1 ring-inset ring-gray-600 focus:ring-2 focus:ring-inset focus:ring-cyan-500"
-            />
-          </div>
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="bg-cyan-500 hover:bg-cyan-600 text-white font-bold py-2 px-6 rounded-full transition-colors"
-            >
-              Save Changes
-            </button>
-          </div>
-        </MotionForm>
-      ) : (
-        <div className="space-y-2 text-gray-300">
-          <p><strong>Full Name:</strong> {user.name}</p>
-          <p><strong>Email:</strong> {user.email}</p>
         </div>
-      )}
+      </div>
     </div>
-  );
+  ));
 
   const AdminProfile = () => {
-    const keyIssues = mockIssues
+    const keyIssues = issues
       .filter(
         (issue) =>
           (issue.priority === 'Critical' || issue.priority === 'High') &&
@@ -128,12 +107,24 @@ const UserProfile: React.FC = () => {
 
   const CitizenProfile = () => {
     const fullUserDetails = mockUsers.find((u) => u.id === user.id);
-    const reportedIssues = fullUserDetails
-      ? mockIssues
-          .filter((issue) => issue.reportedBy === fullUserDetails.name)
-          .sort((a, b) => b.reportedAt.getTime() - a.reportedAt.getTime())
-      : [];
-    const points = fullUserDetails?.points || 0;
+    
+    // Get reported issues by the current user's name
+    const reportedIssues = getIssuesByReporter(user.name)
+      .sort((a, b) => b.reportedAt.getTime() - a.reportedAt.getTime());
+    
+    // Calculate points based on reported issues
+    const points = reportedIssues.reduce((total, issue) => {
+      let issuePoints = 0;
+      switch (issue.priority) {
+        case 'Critical': issuePoints = 100; break;
+        case 'High': issuePoints = 75; break;
+        case 'Medium': issuePoints = 50; break;
+        case 'Low': issuePoints = 25; break;
+      }
+      if (issue.status === IssueStatus.Resolved) issuePoints *= 1.5;
+      return total + issuePoints;
+    }, 0);
+    
     const rank = fullUserDetails?.rank ?? 'N/A';
     const badges: Badge[] = fullUserDetails?.badges || [];
 
@@ -204,14 +195,24 @@ const UserProfile: React.FC = () => {
   };
 
   return (
-    <MotionDiv
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="max-w-5xl mx-auto"
-    >
-      {user.role === 'admin' ? <AdminProfile /> : <CitizenProfile />}
-    </MotionDiv>
+    <>
+      <MotionDiv
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-5xl mx-auto"
+      >
+        {user.role === 'admin' ? <AdminProfile /> : <CitizenProfile />}
+      </MotionDiv>
+      
+      {/* Profile Edit Modal */}
+      <ProfileEditModal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        user={user}
+        onSave={handleSaveProfile}
+      />
+    </>
   );
 };
 

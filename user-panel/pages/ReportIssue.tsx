@@ -7,7 +7,9 @@ import { IssueCategory, Issue, IssueStatus, Department } from '../types';
 import { PhotoIcon, MicrophoneIcon, MapPinIcon, SpinnerIcon, CameraIcon, BuildingOffice2Icon } from '../components/icons';
 import Loader from '../components/Loader';
 import { useAuth } from '../context/AuthContext';
+import { useIssues } from '../context/IssuesContext';
 import { categoryToDepartmentMap } from '../constants';
+import { imageService } from '../services/imageService';
 
 // Extend window type for SpeechRecognition
 interface IWindow extends Window {
@@ -16,7 +18,7 @@ interface IWindow extends Window {
 }
 
 interface ReportIssueProps {
-  onIssueSubmit: (issue: Issue) => void;
+  // Removed onIssueSubmit prop to prevent duplicate submissions
 }
 
 type AnalysisResult = {
@@ -27,7 +29,7 @@ type AnalysisResult = {
 };
 
 
-const ReportIssue: React.FC<ReportIssueProps> = ({ onIssueSubmit }) => {
+const ReportIssue: React.FC<ReportIssueProps> = () => {
   const [description, setDescription] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -47,6 +49,7 @@ const ReportIssue: React.FC<ReportIssueProps> = ({ onIssueSubmit }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const captureModeRef = useRef<'upload' | 'camera' | null>(null);
   const { user } = useAuth();
+  const { addIssue } = useIssues();
 
   useEffect(() => {
     // Detect if the user agent is likely a mobile device.
@@ -109,7 +112,17 @@ const ReportIssue: React.FC<ReportIssueProps> = ({ onIssueSubmit }) => {
 
   const processImageAndGenerateDescription = async (file: File) => {
     setImageFile(file);
-    setImagePreview(URL.createObjectURL(file));
+    
+    // Store image using image service for persistence
+    setProcessingMessage('Storing image...');
+    const storageResult = await imageService.storeImage(file);
+    
+    if (!storageResult.success) {
+      setError(storageResult.error || 'Failed to store image');
+      return;
+    }
+    
+    setImagePreview(storageResult.imageUrl!);
 
     setProcessingMessage('AI is generating a description...');
     setIsGeneratingDescription(true);
@@ -262,7 +275,7 @@ const ReportIssue: React.FC<ReportIssueProps> = ({ onIssueSubmit }) => {
       description: description,
       category: analysisResult.category,
       status: IssueStatus.Reported,
-      imageUrl: imagePreview,
+      imageUrl: imagePreview, // This is now a persistent base64 URL
       address: address,
       reportedBy: user?.name || 'Community Reporter',
       reportedAt: new Date(),
@@ -272,7 +285,12 @@ const ReportIssue: React.FC<ReportIssueProps> = ({ onIssueSubmit }) => {
       assignedDepartment: assignedDepartment,
     };
     
-    onIssueSubmit(newIssue);
+    // Add issue using context only (no duplicate submission)
+    addIssue(newIssue);
+    
+    // Clean up old images to prevent storage bloat
+    imageService.cleanupOldImages();
+    
     navigate('/issues');
   };
   
